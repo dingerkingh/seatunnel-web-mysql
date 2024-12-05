@@ -1,0 +1,69 @@
+services:
+
+  seatunnel-master:
+    image: apache/seatunnel
+    container_name: seatunnel_master
+    environment:
+      - ST_DOCKER_MEMBER_LIST=172.16.0.2   
+    entrypoint: >
+      /bin/sh -c "
+      cp -r /opt/seatunnel/connectors/* /shared-connectors/ && 
+      echo 'Connectors copied to shared volume' && 
+      /opt/seatunnel/bin/seatunnel-cluster.sh -r master
+      "    
+    ports:
+      - "5801:5801"  
+    networks:
+      seatunnel-network:
+        ipv4_address: 172.16.0.2
+    volumes:
+      - shared-connectors:/shared-connectors
+
+  seatunnel-mysql:
+    build:
+      context: ./mysql
+    container_name: seatunnel-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: '123456'
+      MYSQL_DATABASE: seatunnel
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      seatunnel-network:
+        ipv4_address: 172.16.0.200
+
+  seatunnel-web:
+    build:
+      context: ./seatunnel-web
+    container_name: seatunnel-web
+    environment:
+      - SEATUNNEL_MASTER_HOST=172.16.0.2
+      - MYSQL_HOST=172.16.0.200
+      - MYSQL_PORT=3306
+      - MYSQL_DB=seatunnel
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123456
+    ports:
+      - "8080:8080"
+      - "8801:8801"
+    networks:
+      seatunnel-network:
+        ipv4_address: 172.16.0.3
+    depends_on:
+      - seatunnel-master
+      - seatunnel-mysql
+    volumes:
+      - shared-connectors:/shared-connectors
+
+volumes:
+  mysql-data:
+  shared-connectors:
+
+networks:
+  seatunnel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/24

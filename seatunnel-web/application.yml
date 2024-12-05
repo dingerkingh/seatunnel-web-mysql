@@ -1,0 +1,36 @@
+server:
+  port: 8801
+  address: 0.0.0.0
+
+seatunnel:
+  server:
+    host: seatunnel  # Service name from Docker Compose
+    port: 5801       # Adjust if the seatunnel server uses a different port
+
+spring:
+  profiles:
+    active: mysql
+  application:
+    name: seatunnel-web
+  datasource:
+    url: 'jdbc:mysql://seatunnel-mysql:3306/seatunnel?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC'
+    username: root
+    password: "123456"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration
+      - org.springframework.boot.autoconfigure.hazelcast.HazelcastClientAutoConfiguration
+
+# JWT Configuration
+jwt:
+  expireTime: 3600                # Token expiration time in seconds
+  secretKey: "Cyaew6nS3S53P_WJfZUpJ35PH1MWuejDoWoSFNmAGhQ="  # Replace with a secure secret key
+  algorithm: "HS256"                # JWT signing algorithm
+  issuer: "your_issuer_name"        # Optional: JWT issuer
+  audience: "your_audience_name"    # Optional: JWT audience
+
+
